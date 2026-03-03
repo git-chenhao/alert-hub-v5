@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>批次列表 - Alert Hub V5</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #f5f7fa; color: #333; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 0; margin-bottom: 30px; }
+        .header h1 { font-size: 32px; margin-bottom: 10px; }
+        .nav { margin-top: 20px; }
+        .nav a { color: white; text-decoration: none; margin-right: 20px; opacity: 0.9; }
+        .nav a:hover { opacity: 1; text-decoration: underline; }
+        .card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); }
+        .batch-card { border: 1px solid #eee; border-radius: 8px; padding: 20px; margin-bottom: 15px; }
+        .batch-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+        .batch-no { font-size: 18px; font-weight: 600; color: #667eea; }
+        .badge { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+        .badge.open { background: #e0e7ff; color: #4f46e5; }
+        .badge.closed { background: #fef3c7; color: #d97706; }
+        .badge.sent { background: #d1fae5; color: #059669; }
+        .batch-stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px; }
+        .stat-item { text-align: center; padding: 10px; background: #f8f9fa; border-radius: 6px; }
+        .stat-label { font-size: 12px; color: #666; margin-bottom: 5px; }
+        .stat-value { font-size: 18px; font-weight: 600; color: #333; }
+        .batch-time { font-size: 13px; color: #666; margin-top: 10px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>📦 批次列表</h1>
+            <div class="nav">
+                <a href="/admin">📊 仪表盘</a>
+                <a href="/admin/alerts">📋 告警列表</a>
+                <a href="/admin/batches">📦 批次列表</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div th:if="${batches.isEmpty()}" style="text-align: center; color: #999; padding: 60px;">
+                <p style="font-size: 48px; margin-bottom: 20px;">📭</p>
+                <p>暂无批次数据</p>
+            </div>
+
+            <div th:each="batch : ${batches}" class="batch-card">
+                <div class="batch-header">
+                    <div class="batch-no" th:text="${batch.batchNo}">BATCH-20240101000000</div>
+                    <span class="badge" th:classappend="${batch.status}" th:text="${batch.status}">open</span>
+                </div>
+
+                <div class="batch-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">告警数量</div>
+                        <div class="stat-value" th:text="${batch.alertCount}">0</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">时间窗口</div>
+                        <div class="stat-value" th:text="${#temporals.format(batch.windowStart, 'HH:mm')} + ' ~ ' + ${#temporals.format(batch.windowEnd, 'HH:mm')}">00:00 ~ 00:00</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">发送状态</div>
+                        <div class="stat-value" th:text="${batch.sentAt != null} ? '已发送' : '未发送'">未发送</div>
+                    </div>
+                </div>
+
+                <div class="batch-time" th:if="${batch.summary}">
+                    <strong>摘要:</strong> <span th:text="${batch.summary}">批次摘要信息</span>
+                </div>
+
+                <div class="batch-time">
+                    创建时间: <span th:text="${#temporals.format(batch.createdAt, 'yyyy-MM-dd HH:mm:ss')}">2024-01-01 00:00:00</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
