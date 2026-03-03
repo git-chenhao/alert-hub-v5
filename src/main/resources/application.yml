@@ -56,6 +56,16 @@ server:
 
 # Alert Hub 自定义配置
 alerthub:
+  # CORS 配置
+  cors:
+    allowed-origins: "*"  # 生产环境应配置具体的域名，如: "https://example.com,https://api.example.com"
+
+  # 安全配置
+  security:
+    enabled: true
+    admin-username: admin
+    admin-password: ${ALERTHUB_ADMIN_PASSWORD:}  # 必须通过环境变量设置，否则启动时会生成随机密码
+
   # 告警去重配置
   deduplication:
     enabled: true

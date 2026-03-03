@@ -2,6 +2,7 @@ package com.alerthub.config;
 
 import com.alerthub.dto.AlertResponse;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -18,6 +19,9 @@ import java.util.Map;
 @Slf4j
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    @Value("${spring.profiles.active:dev}")
+    private String activeProfile;
 
     /**
      * 处理参数校验异常
@@ -54,14 +58,17 @@ public class GlobalExceptionHandler {
 
     /**
      * 处理运行时异常
+     * 生产环境不返回具体错误信息，避免泄露敏感信息
      */
     @ExceptionHandler(RuntimeException.class)
     public ResponseEntity<AlertResponse<Void>> handleRuntimeException(RuntimeException ex) {
         log.error("运行时异常", ex);
 
+        String message = isProduction() ? "系统内部错误" : "系统内部错误: " + ex.getMessage();
+
         return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
-            .body(AlertResponse.error(500, "系统内部错误: " + ex.getMessage()));
+            .body(AlertResponse.error(500, message));
     }
 
     /**
@@ -74,5 +81,9 @@ public class GlobalExceptionHandler {
         return ResponseEntity
             .status(HttpStatus.INTERNAL_SERVER_ERROR)
             .body(AlertResponse.error(500, "系统内部错误"));
+    }
+
+    private boolean isProduction() {
+        return "prod".equals(activeProfile);
     }
 }
