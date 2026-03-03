@@ -4,6 +4,7 @@ import com.alerthub.entity.Alert;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
@@ -71,4 +72,11 @@ public interface AlertRepository extends JpaRepository<Alert, Long> {
      */
     @Query("SELECT a.severity, COUNT(a) FROM Alert a GROUP BY a.severity")
     List<Object[]> countBySeverity();
+
+    /**
+     * 批量更新告警状态和批次ID
+     */
+    @Modifying
+    @Query("UPDATE Alert a SET a.status = :status, a.batchId = :batchId WHERE a.id IN :ids")
+    int batchUpdateStatusAndBatchId(@Param("ids") List<Long> ids, @Param("status") String status, @Param("batchId") Long batchId);
 }

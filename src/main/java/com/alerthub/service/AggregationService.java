@@ -120,15 +120,14 @@ public class AggregationService {
     }
 
     /**
-     * 更新告警状态
+     * 更新告警状态（使用批量更新避免 N+1 查询）
      */
     @Transactional
     public void updateAlertsStatus(List<Long> alertIds, Long batchId) {
-        alertRepository.findAllById(alertIds).forEach(alert -> {
-            alert.setStatus("aggregated");
-            alert.setBatchId(batchId);
-            alertRepository.save(alert);
-        });
+        if (alertIds == null || alertIds.isEmpty()) {
+            return;
+        }
+        alertRepository.batchUpdateStatusAndBatchId(alertIds, "aggregated", batchId);
     }
 
     /**
@@ -136,6 +135,14 @@ public class AggregationService {
      */
     @Transactional
     public AlertBatch manualAggregate(List<Long> alertIds) {
+        // 限制批量操作大小，防止资源耗尽
+        if (alertIds == null || alertIds.isEmpty()) {
+            throw new IllegalArgumentException("告警ID列表不能为空");
+        }
+        if (alertIds.size() > maxBatchSize) {
+            throw new IllegalArgumentException("批量操作数量超过限制: " + maxBatchSize);
+        }
+
         List<Alert> alerts = alertRepository.findAllById(alertIds);
 
         if (alerts.isEmpty()) {

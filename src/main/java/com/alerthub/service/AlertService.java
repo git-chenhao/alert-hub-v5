@@ -119,6 +119,13 @@ public class AlertService {
     }
 
     /**
+     * 根据ID获取告警
+     */
+    public Optional<Alert> findById(Long id) {
+        return alertRepository.findById(id);
+    }
+
+    /**
      * 根据状态获取告警
      */
     public Page<Alert> getAlertsByStatus(String status, Pageable pageable) {
@@ -144,15 +151,14 @@ public class AlertService {
     }
 
     /**
-     * 批量更新告警状态
+     * 批量更新告警状态（使用批量更新避免 N+1 查询）
      */
     @Transactional
     public void batchUpdateStatus(List<Long> ids, String status, Long batchId) {
-        alertRepository.findAllById(ids).forEach(alert -> {
-            alert.setStatus(status);
-            alert.setBatchId(batchId);
-            alertRepository.save(alert);
-        });
+        if (ids == null || ids.isEmpty()) {
+            return;
+        }
+        alertRepository.batchUpdateStatusAndBatchId(ids, status, batchId);
     }
 
     /**

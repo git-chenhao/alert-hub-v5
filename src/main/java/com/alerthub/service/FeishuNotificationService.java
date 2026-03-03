@@ -41,7 +41,7 @@ public class FeishuNotificationService {
         DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
 
     /**
-     * 发送批次通知
+     * 发送批次通知（异步方式，避免阻塞响应式线程）
      */
     public void sendBatchNotification(AlertBatch batch, List<Alert> alerts) {
         if (!enabled) {
@@ -65,17 +65,24 @@ public class FeishuNotificationService {
             body.put("msg_type", "interactive");
             body.put("card", message);
 
-            String response = webClient.post()
+            // 使用异步方式发送，避免阻塞响应式线程
+            webClient.post()
                 .uri(webhookUrl)
                 .bodyValue(body)
                 .retrieve()
                 .bodyToMono(String.class)
-                .block();
+                .subscribe(
+                    response -> {
+                        log.info("飞书通知发送成功: batchNo={}, response={}", batch.getBatchNo(), response);
+                        batch.setNotificationResult(response);
+                    },
+                    error -> {
+                        log.error("飞书通知发送失败: batchNo={}", batch.getBatchNo(), error);
+                        batch.setNotificationResult("发送失败: " + error.getMessage());
+                    }
+                );
 
-            log.info("飞书通知发送成功: batchNo={}, response={}", batch.getBatchNo(), response);
-
-            // 更新批次通知结果
-            batch.setNotificationResult(response);
+            log.info("飞书通知已提交发送: batchNo={}", batch.getBatchNo());
 
         } catch (Exception e) {
             log.error("飞书通知发送失败: batchNo={}", batch.getBatchNo(), e);

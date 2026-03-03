@@ -80,10 +80,7 @@ public class DashboardController {
      */
     @GetMapping("/alerts/{id}")
     public String alertDetail(@PathVariable Long id, Model model) {
-        Alert alert = alertService.getAllAlerts(PageRequest.of(0, 1))
-            .stream()
-            .filter(a -> a.getId().equals(id))
-            .findFirst()
+        Alert alert = alertService.findById(id)
             .orElseThrow(() -> new RuntimeException("告警不存在"));
 
         model.addAttribute("alert", alert);
