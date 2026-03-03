@@ -59,18 +59,22 @@ public class DashboardController {
         @RequestParam(required = false) String status,
         Model model) {
 
+        // 验证状态参数
+        List<String> validStatuses = List.of("pending", "aggregated", "sent", "resolved");
+        String validStatus = (status != null && validStatuses.contains(status)) ? status : null;
+
         PageRequest pageRequest = PageRequest.of(page, size, Sort.by("createdAt").descending());
 
         Page<Alert> alertPage;
-        if (status != null && !status.isEmpty()) {
-            alertPage = alertService.getAlertsByStatus(status, pageRequest);
+        if (validStatus != null) {
+            alertPage = alertService.getAlertsByStatus(validStatus, pageRequest);
         } else {
             alertPage = alertService.getAllAlerts(pageRequest);
         }
 
         model.addAttribute("alertPage", alertPage);
-        model.addAttribute("currentStatus", status);
-        model.addAttribute("statuses", List.of("pending", "aggregated", "sent", "resolved"));
+        model.addAttribute("currentStatus", validStatus);
+        model.addAttribute("statuses", validStatuses);
 
         return "admin/alerts";
     }

@@ -5,6 +5,7 @@ import com.alerthub.dto.AlertResponse;
 import com.alerthub.entity.Alert;
 import com.alerthub.service.AlertService;
 import jakarta.validation.Valid;
+import jakarta.validation.constraints.Size;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.ResponseEntity;
@@ -49,6 +50,7 @@ public class AlertWebhookController {
      */
     @PostMapping("/batch")
     public ResponseEntity<AlertResponse<List<Alert>>> receiveAlerts(
+        @Size(min = 1, max = 100, message = "批量请求数量必须在 1-100 之间")
         @Valid @RequestBody List<AlertRequest> requests) {
         log.info("收到批量告警请求: {} 条", requests.size());
 

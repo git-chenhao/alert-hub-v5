@@ -66,6 +66,7 @@ public class FeishuNotificationService {
             body.put("card", message);
 
             // 使用异步方式发送，避免阻塞响应式线程
+            // 注意：不在回调中修改实体，因为事务已结束且修改不会持久化
             webClient.post()
                 .uri(webhookUrl)
                 .bodyValue(body)
@@ -74,11 +75,9 @@ public class FeishuNotificationService {
                 .subscribe(
                     response -> {
                         log.info("飞书通知发送成功: batchNo={}, response={}", batch.getBatchNo(), response);
-                        batch.setNotificationResult(response);
                     },
                     error -> {
                         log.error("飞书通知发送失败: batchNo={}", batch.getBatchNo(), error);
-                        batch.setNotificationResult("发送失败: " + error.getMessage());
                     }
                 );
 
@@ -86,7 +85,6 @@ public class FeishuNotificationService {
 
         } catch (Exception e) {
             log.error("飞书通知发送失败: batchNo={}", batch.getBatchNo(), e);
-            batch.setNotificationResult("发送失败: " + e.getMessage());
         }
     }
 

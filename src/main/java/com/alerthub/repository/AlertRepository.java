@@ -46,6 +46,12 @@ public interface AlertRepository extends JpaRepository<Alert, Long> {
     List<Alert> findPendingAlertsAfter(@Param("startTime") LocalDateTime startTime);
 
     /**
+     * 查找指定时间范围内的待处理告警（带数量限制，防止内存溢出）
+     */
+    @Query("SELECT a FROM Alert a WHERE a.status = 'pending' AND a.createdAt >= :startTime ORDER BY a.createdAt ASC LIMIT :limit")
+    List<Alert> findPendingAlertsAfterWithLimit(@Param("startTime") LocalDateTime startTime, @Param("limit") int limit);
+
+    /**
      * 统计指定状态的告警数量
      */
     long countByStatus(String status);

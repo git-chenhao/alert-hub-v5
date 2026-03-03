@@ -42,8 +42,9 @@ public class AggregationService {
 
     /**
      * 定时聚合任务 - 每分钟执行
+     * 使用 fixedDelay 避免任务重叠执行
      */
-    @Scheduled(fixedRate = 60000)
+    @Scheduled(fixedDelay = 60000)
     @Transactional
     public void aggregateAlerts() {
         if (!enabled) {
@@ -52,9 +53,10 @@ public class AggregationService {
 
         log.debug("开始告警聚合任务");
 
-        // 获取待处理告警
-        List<Alert> pendingAlerts = alertRepository.findPendingAlertsAfter(
-            LocalDateTime.now().minusMinutes(windowSize)
+        // 获取待处理告警（带数量限制，防止内存溢出）
+        List<Alert> pendingAlerts = alertRepository.findPendingAlertsAfterWithLimit(
+            LocalDateTime.now().minusMinutes(windowSize),
+            maxBatchSize
         );
 
         if (pendingAlerts.isEmpty()) {
