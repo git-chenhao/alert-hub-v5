@@ -1,0 +1,107 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>告警列表 - Alert Hub V5</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif; background: #f5f7fa; color: #333; }
+        .container { max-width: 1400px; margin: 0 auto; padding: 20px; }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px 0; margin-bottom: 30px; }
+        .header h1 { font-size: 32px; margin-bottom: 10px; }
+        .nav { margin-top: 20px; }
+        .nav a { color: white; text-decoration: none; margin-right: 20px; opacity: 0.9; }
+        .nav a:hover { opacity: 1; text-decoration: underline; }
+        .card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 2px 8px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        .filter-bar { margin-bottom: 20px; }
+        .filter-bar select, .filter-bar button { padding: 10px 15px; border: 1px solid #ddd; border-radius: 6px; margin-right: 10px; }
+        .filter-bar button { background: #667eea; color: white; border: none; cursor: pointer; }
+        table { width: 100%; border-collapse: collapse; }
+        th, td { padding: 15px; text-align: left; border-bottom: 1px solid #eee; }
+        th { background: #f8f9fa; font-weight: 600; }
+        .badge { padding: 4px 12px; border-radius: 12px; font-size: 12px; font-weight: 500; }
+        .badge.critical { background: #fee2e2; color: #dc2626; }
+        .badge.warning { background: #fef3c7; color: #d97706; }
+        .badge.info { background: #dbeafe; color: #2563eb; }
+        .badge.pending { background: #e0e7ff; color: #4f46e5; }
+        .badge.aggregated { background: #fce7f3; color: #db2777; }
+        .badge.sent { background: #d1fae5; color: #059669; }
+        .pagination { margin-top: 20px; text-align: center; }
+        .pagination a { padding: 8px 16px; margin: 0 4px; border: 1px solid #ddd; text-decoration: none; color: #667eea; }
+        .pagination a.active { background: #667eea; color: white; border-color: #667eea; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="container">
+            <h1>📋 告警列表</h1>
+            <div class="nav">
+                <a href="/admin">📊 仪表盘</a>
+                <a href="/admin/alerts">📋 告警列表</a>
+                <a href="/admin/batches">📦 批次列表</a>
+            </div>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="card">
+            <div class="filter-bar">
+                <label>状态筛选:</label>
+                <select id="statusFilter" onchange="filterByStatus()">
+                    <option value="">全部</option>
+                    <option th:each="s : ${statuses}" th:value="${s}" th:text="${s}" th:selected="${s == currentStatus}"></option>
+                </select>
+                <button onclick="location.href='/admin/alerts'">重置</button>
+            </div>
+
+            <table>
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>标题</th>
+                        <th>来源</th>
+                        <th>级别</th>
+                        <th>状态</th>
+                        <th>创建时间</th>
+                        <th>操作</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <tr th:each="alert : ${alertPage.content}">
+                        <td th:text="${alert.id}">1</td>
+                        <td th:text="${alert.title}">告警标题</td>
+                        <td th:text="${alert.source}">unknown</td>
+                        <td><span class="badge" th:classappend="${alert.severity}" th:text="${alert.severity}">info</span></td>
+                        <td><span class="badge" th:classappend="${alert.status}" th:text="${alert.status}">pending</span></td>
+                        <td th:text="${#temporals.format(alert.createdAt, 'yyyy-MM-dd HH:mm:ss')}">2024-01-01 00:00:00</td>
+                        <td>
+                            <button>详情</button>
+                        </td>
+                    </tr>
+                </tbody>
+            </table>
+
+            <div class="pagination" th:if="${alertPage.totalPages > 1}">
+                <a th:href="@{/admin/alerts(page=0, status=${currentStatus})}" th:classappend="${alertPage.first} ? 'disabled'">«</a>
+                <a th:each="i : ${#numbers.sequence(0, alertPage.totalPages - 1)}"
+                   th:href="@{/admin/alerts(page=${i}, status=${currentStatus})}"
+                   th:text="${i + 1}"
+                   th:classappend="${alertPage.number == i} ? 'active'">1</a>
+                <a th:href="@{/admin/alerts(page=${alertPage.totalPages - 1}, status=${currentStatus})}" th:classappend="${alertPage.last} ? 'disabled'">»</a>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function filterByStatus() {
+            var status = document.getElementById('statusFilter').value;
+            var url = '/admin/alerts';
+            if (status) {
+                url += '?status=' + status;
+            }
+            window.location.href = url;
+        }
+    </script>
+</body>
+</html>

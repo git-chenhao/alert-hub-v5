@@ -1,0 +1,4 @@
+# 测试环境配置
+alerthub:
+  security:
+    enabled: false
