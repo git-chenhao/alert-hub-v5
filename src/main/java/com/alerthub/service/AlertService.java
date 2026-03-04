@@ -120,14 +120,11 @@ public class AlertService {
             }
         }
 
-        // 更新告警状态和根因分析结果
-        for (Alert alert : alerts) {
-            alert.setStatus("analyzed");
-            if (analysisResult.getResult() != null) {
-                alert.setRootCauseAnalysis(analysisResult.getResult().getRootCauseDescription());
-            }
-            alertRepository.save(alert);
-        }
+        // 批量更新告警状态和根因分析结果（避免 N+1 问题）
+        List<Long> alertIds = alerts.stream().map(Alert::getId).toList();
+        String rootCauseDescription = analysisResult.getResult() != null ?
+            analysisResult.getResult().getRootCauseDescription() : null;
+        alertRepository.updateStatusAndRootCauseByIds("analyzed", rootCauseDescription, alertIds);
 
         alertBatchRepository.save(batch);
 

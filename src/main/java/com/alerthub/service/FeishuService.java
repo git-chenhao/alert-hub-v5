@@ -134,17 +134,33 @@ public class FeishuService {
             ));
         }
 
+        // 安全获取指纹（边界检查）
+        String fingerprintDisplay = getFingerprintDisplay(alert.getFingerprint());
+
         // 时间信息
         elements.add(Map.of(
             "tag", "div",
             "fields", List.of(
                 Map.of("is_short", true, "text", Map.of("content", "**创建时间:** " + alert.getCreatedAt(), "tag", "lark_md")),
-                Map.of("is_short", true, "text", Map.of("content", "**指纹:** " + alert.getFingerprint().substring(0, 8) + "...", "tag", "lark_md"))
+                Map.of("is_short", true, "text", Map.of("content", "**指纹:** " + fingerprintDisplay, "tag", "lark_md"))
             )
         ));
 
         card.put("elements", elements);
         return card;
+    }
+
+    /**
+     * 安全获取指纹显示文本（边界检查）
+     */
+    private String getFingerprintDisplay(String fingerprint) {
+        if (fingerprint == null || fingerprint.isEmpty()) {
+            return "N/A";
+        }
+        if (fingerprint.length() <= 8) {
+            return fingerprint;
+        }
+        return fingerprint.substring(0, 8) + "...";
     }
 
     /**
@@ -168,19 +184,21 @@ public class FeishuService {
             )
         ));
 
-        // 严重程度统计
-        Map<String, Long> severityCount = new LinkedHashMap<>();
-        for (Alert alert : alerts) {
-            severityCount.merge(alert.getSeverity(), 1L, Long::sum);
+        // 严重程度统计（添加空列表边界检查）
+        if (alerts != null && !alerts.isEmpty()) {
+            Map<String, Long> severityCountMap = new LinkedHashMap<>();
+            for (Alert alert : alerts) {
+                severityCountMap.merge(alert.getSeverity(), 1L, Long::sum);
+            }
+            String severityDistribution = severityCountMap.entrySet().stream()
+                .map(e -> e.getKey() + ": " + e.getValue())
+                .reduce((a, b) -> a + " | " + b)
+                .orElse("无");
+            elements.add(Map.of(
+                "tag", "div",
+                "text", Map.of("content", "**严重程度分布:** " + severityDistribution, "tag", "lark_md")
+            ));
         }
-        String severityStats = severityCount.entrySet().stream()
-            .map(e -> e.getKey() + ": " + e.getValue())
-            .reduce((a, b) -> a + " | " + b)
-            .orElse("");
-        elements.add(Map.of(
-            "tag", "div",
-            "text", Map.of("content", "**严重程度分布:** " + severityStats, "tag", "lark_md")
-        ));
 
         // 根因分析结果
         if (analysisResult != null && analysisResult.isSuccess() && analysisResult.getResult() != null) {

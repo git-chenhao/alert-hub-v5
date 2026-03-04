@@ -131,11 +131,9 @@ public class AggregationService {
             return;
         }
 
-        // 更新告警状态
-        alerts.forEach(alert -> {
-            alert.setStatus("analyzing");
-            alertRepository.save(alert);
-        });
+        // 批量更新告警状态（避免 N+1 问题）
+        List<Long> alertIds = alerts.stream().map(Alert::getId).toList();
+        alertRepository.updateStatusByIds("analyzing", alertIds);
 
         batch.setStatus("completed");
         batch.setProcessedAt(LocalDateTime.now());

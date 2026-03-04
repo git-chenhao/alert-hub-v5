@@ -3,8 +3,8 @@ package com.alerthub.config;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import jakarta.servlet.http.HttpSession;
+import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 import org.springframework.util.StringUtils;
 import org.springframework.web.servlet.HandlerInterceptor;
@@ -15,20 +15,19 @@ import org.springframework.web.servlet.HandlerInterceptor;
  */
 @Slf4j
 @Component
+@RequiredArgsConstructor
 public class DashboardAuthInterceptor implements HandlerInterceptor {
 
     private static final String AUTHENTICATED_SESSION_KEY = "dashboard_authenticated";
 
-    @Value("${alert.dashboard.password:}")
-    private String dashboardPassword;
-
-    @Value("${alert.dashboard.auth-enabled:true}")
-    private boolean authEnabled;
+    private final AlertHubProperties properties;
 
     @Override
     public boolean preHandle(HttpServletRequest request, HttpServletResponse response, Object handler) throws Exception {
-        // 如果未配置密码或未启用认证，则跳过
-        if (!authEnabled || !StringUtils.hasText(dashboardPassword)) {
+        // 如果未配置密码或未启用认证，记录警告并放行
+        if (!properties.getSecurity().isDashboardAuthEnabled() ||
+            !StringUtils.hasText(properties.getSecurity().getDashboardPassword())) {
+            log.warn("Dashboard 未配置访问密码，建议在生产环境配置 DASHBOARD_PASSWORD 环境变量");
             return true;
         }
 
