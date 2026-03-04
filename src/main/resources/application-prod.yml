@@ -1,0 +1,22 @@
+# 生产环境配置
+spring:
+  # H2 控制台 - 生产环境强制关闭
+  h2:
+    console:
+      enabled: false
+
+  # 生产环境数据库配置 - 建议使用环境变量注入
+  datasource:
+    url: ${DATABASE_URL:jdbc:h2:file:./data/alerthub;DB_CLOSE_ON_EXIT=FALSE;AUTO_RECONNECT=TRUE}
+    username: ${DATABASE_USERNAME:alerthub}
+    password: ${DATABASE_PASSWORD:}
+
+# API 认证密钥
+alert:
+  api-key: ${ALERT_API_KEY:}
+
+# 生产环境日志
+logging:
+  level:
+    root: WARN
+    com.alerthub: INFO

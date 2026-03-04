@@ -22,10 +22,10 @@ spring:
         format_sql: true
         dialect: org.hibernate.dialect.H2Dialect
 
-  # H2 控制台
+  # H2 控制台 - 默认关闭，仅 dev 环境开启
   h2:
     console:
-      enabled: true
+      enabled: false
       path: /h2-console
 
   # Thymeleaf 配置

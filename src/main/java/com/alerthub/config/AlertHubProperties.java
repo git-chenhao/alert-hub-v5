@@ -18,6 +18,7 @@ public class AlertHubProperties {
     private AggregationConfig aggregation = new AggregationConfig();
     private A2AConfig a2a = new A2AConfig();
     private FeishuConfig feishu = new FeishuConfig();
+    private SecurityConfig security = new SecurityConfig();
     private List<String> fingerprintFields = List.of("source", "alertName", "severity", "labels");
 
     @Data
@@ -48,5 +49,13 @@ public class AlertHubProperties {
         private boolean enabled = false;
         private String webhookUrl;
         private String secret;
+    }
+
+    @Data
+    public static class SecurityConfig {
+        private String apiKey;
+        private boolean apiKeyEnabled = true;
+        private String dashboardPassword;
+        private boolean dashboardAuthEnabled = true;
     }
 }
