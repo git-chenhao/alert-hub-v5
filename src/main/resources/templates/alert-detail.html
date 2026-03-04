@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alert Hub V5 - 告警详情</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f5f5f5; }
+        .card { margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+        .severity-critical { color: #dc3545; font-weight: bold; }
+        .severity-high { color: #fd7e14; }
+        .severity-medium { color: #ffc107; }
+        .severity-low { color: #0d6efd; }
+        .severity-info { color: #6c757d; }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard">🚨 Alert Hub V5</a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/dashboard">仪表盘</a>
+                <a class="nav-link" href="/dashboard/alerts">告警列表</a>
+                <a class="nav-link" href="/dashboard/batches">批次列表</a>
+                <a class="nav-link" href="/dashboard/statistics">统计</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb">
+                <li class="breadcrumb-item"><a href="/dashboard/alerts">告警列表</a></li>
+                <li class="breadcrumb-item active">告警详情</li>
+            </ol>
+        </nav>
+
+        <div class="row">
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-header">
+                        <h4 th:text="${alert.alertName}">告警名称</h4>
+                    </div>
+                    <div class="card-body">
+                        <table class="table">
+                            <tr>
+                                <th width="150">ID</th>
+                                <td th:text="${alert.id}">1</td>
+                            </tr>
+                            <tr>
+                                <th>来源</th>
+                                <td th:text="${alert.source}">Source</td>
+                            </tr>
+                            <tr>
+                                <th>严重程度</th>
+                                <td>
+                                    <span th:class="'severity-' + ${alert.severity}" th:text="${#strings.toUpperCase(alert.severity)}">HIGH</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>状态</th>
+                                <td>
+                                    <span class="badge bg-secondary" th:text="${alert.status}">pending</span>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>指纹</th>
+                                <td>
+                                    <code th:text="${alert.fingerprint}">fingerprint</code>
+                                </td>
+                            </tr>
+                            <tr>
+                                <th>创建时间</th>
+                                <td th:text="${#temporals.format(alert.createdAt, 'yyyy-MM-dd HH:mm:ss')}">2024-03-04 22:00:00</td>
+                            </tr>
+                            <tr>
+                                <th>告警开始时间</th>
+                                <td th:text="${alert.startsAt != null} ? ${#temporals.format(alert.startsAt, 'yyyy-MM-dd HH:mm:ss')} : '-'">-</td>
+                            </tr>
+                        </table>
+
+                        <div th:if="${alert.message != null and !alert.message.isEmpty()}">
+                            <h5>消息</h5>
+                            <p th:text="${alert.message}">Alert message</p>
+                        </div>
+
+                        <div th:if="${alert.description != null and !alert.description.isEmpty()}">
+                            <h5>描述</h5>
+                            <p th:text="${alert.description}">Alert description</p>
+                        </div>
+
+                        <div th:if="${alert.rootCauseAnalysis != null and !alert.rootCauseAnalysis.isEmpty()}">
+                            <h5>根因分析</h5>
+                            <div class="alert alert-info" th:text="${alert.rootCauseAnalysis}">Root cause analysis result</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">
+                        <h5>操作</h5>
+                    </div>
+                    <div class="card-body">
+                        <button class="btn btn-primary w-100 mb-2" onclick="triggerAnalysis()">触发根因分析</button>
+                        <a class="btn btn-outline-secondary w-100" href="/dashboard/alerts">返回列表</a>
+                    </div>
+                </div>
+
+                <div th:if="${batch != null}" class="card">
+                    <div class="card-header">
+                        <h5>所属批次</h5>
+                    </div>
+                    <div class="card-body">
+                        <a th:href="@{/dashboard/batches/{id}(id=${batch.id})}" th:text="${batch.batchNo}">BATCH-001</a>
+                        <div>
+                            <span class="badge bg-info" th:text="${batch.alertCount + ' 个告警'}">5 个告警</span>
+                            <span class="badge bg-secondary" th:text="${batch.status}">open</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script th:inline="javascript">
+        function triggerAnalysis() {
+            const alertId = [[${alert.id}]];
+            fetch(`/api/alerts/${alertId}/analyze`, { method: 'POST' })
+                .then(response => response.json())
+                .then(data => {
+                    alert('根因分析已触发');
+                    location.reload();
+                })
+                .catch(error => {
+                    alert('触发失败: ' + error);
+                });
+        }
+    </script>
+</body>
+</html>

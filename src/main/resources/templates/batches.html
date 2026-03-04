@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Alert Hub V5 - 批次列表</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f5f5f5; }
+        .card { margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    </style>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg navbar-dark bg-primary">
+        <div class="container">
+            <a class="navbar-brand" href="/dashboard">🚨 Alert Hub V5</a>
+            <div class="navbar-nav">
+                <a class="nav-link" href="/dashboard">仪表盘</a>
+                <a class="nav-link" href="/dashboard/alerts">告警列表</a>
+                <a class="nav-link active" href="/dashboard/batches">批次列表</a>
+                <a class="nav-link" href="/dashboard/statistics">统计</a>
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        <h2 class="mb-4">批次列表</h2>
+
+        <div class="card">
+            <div class="card-body">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>ID</th>
+                            <th>批次编号</th>
+                            <th>状态</th>
+                            <th>告警数量</th>
+                            <th>窗口开始</th>
+                            <th>窗口结束</th>
+                            <th>创建时间</th>
+                            <th>操作</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr th:each="batch : ${batches.content}">
+                            <td th:text="${batch.id}">1</td>
+                            <td>
+                                <a th:href="@{/dashboard/batches/{id}(id=${batch.id})}" th:text="${batch.batchNo}">BATCH-001</a>
+                            </td>
+                            <td>
+                                <span class="badge"
+                                      th:classappend="${batch.status == 'completed'} ? 'bg-success' : (${batch.status == 'processing'} ? 'bg-warning' : 'bg-info')"
+                                      th:text="${batch.status}">open</span>
+                            </td>
+                            <td th:text="${batch.alertCount}">5</td>
+                            <td th:text="${batch.windowStart != null} ? ${#temporals.format(batch.windowStart, 'MM-dd HH:mm:ss')} : '-'">-</td>
+                            <td th:text="${batch.windowEnd != null} ? ${#temporals.format(batch.windowEnd, 'MM-dd HH:mm:ss')} : '-'">-</td>
+                            <td th:text="${#temporals.format(batch.createdAt, 'yyyy-MM-dd HH:mm:ss')}">2024-03-04 22:00:00</td>
+                            <td>
+                                <a class="btn btn-sm btn-outline-primary" th:href="@{/dashboard/batches/{id}(id=${batch.id})}">详情</a>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+
+                <!-- 分页 -->
+                <nav th:if="${totalPages > 1}">
+                    <ul class="pagination justify-content-center">
+                        <li class="page-item" th:classappend="${currentPage == 0} ? 'disabled'">
+                            <a class="page-link" th:href="@{/dashboard/batches(page=${currentPage - 1})}">上一页</a>
+                        </li>
+                        <li class="page-item" th:each="i : ${#numbers.sequence(0, totalPages - 1)}"
+                            th:classappend="${currentPage == i} ? 'active'">
+                            <a class="page-link" th:href="@{/dashboard/batches(page=${i})}" th:text="${i + 1}">1</a>
+                        </li>
+                        <li class="page-item" th:classappend="${currentPage == totalPages - 1} ? 'disabled'">
+                            <a class="page-link" th:href="@{/dashboard/batches(page=${currentPage + 1})}">下一页</a>
+                        </li>
+                    </ul>
+                </nav>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

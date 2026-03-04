@@ -1,0 +1,79 @@
+server:
+  port: 8080
+
+spring:
+  application:
+    name: alert-hub-v5
+
+  # H2 数据库配置
+  datasource:
+    url: jdbc:h2:file:./data/alerthub;DB_CLOSE_ON_EXIT=FALSE;AUTO_RECONNECT=TRUE
+    driver-class-name: org.h2.Driver
+    username: sa
+    password:
+
+  # JPA 配置
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.H2Dialect
+
+  # H2 控制台
+  h2:
+    console:
+      enabled: true
+      path: /h2-console
+
+  # Thymeleaf 配置
+  thymeleaf:
+    cache: false
+    prefix: classpath:/templates/
+    suffix: .html
+
+# 告警中心配置
+alert:
+  # 去重配置
+  deduplication:
+    enabled: true
+    algorithm: MD5  # MD5 或 SHA256
+    ttl-hours: 24   # 去重缓存过期时间
+
+  # 聚合配置
+  aggregation:
+    enabled: true
+    window-seconds: 60    # 聚合窗口（秒）
+    max-batch-size: 100   # 单批次最大告警数
+    strategy: TIME_WINDOW # TIME_WINDOW 或 COUNT_BASED
+
+  # A2A Agent 配置
+  a2a:
+    enabled: true
+    agent-url: http://localhost:8081/api/agent
+    timeout-seconds: 30
+    retry-count: 3
+
+  # 飞书通知配置
+  feishu:
+    enabled: false
+    webhook-url: ${FEISHU_WEBHOOK_URL:}
+    secret: ${FEISHU_SECRET:}
+
+  # 指纹计算字段
+  fingerprint-fields:
+    - source
+    - alertName
+    - severity
+    - labels
+
+# 日志配置
+logging:
+  level:
+    root: INFO
+    com.alerthub: DEBUG
+    org.springframework.web: INFO
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
