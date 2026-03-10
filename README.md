@@ -211,3 +211,4 @@ java -jar target/alert-hub-v5-1.0.0-SNAPSHOT.jar --spring.profiles.active=prod
 MIT License
 
 <!-- SMOKE_MARKER: v2-test-20260309 -->
+second smoke marker
