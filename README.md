@@ -207,3 +207,5 @@ java -jar target/alert-hub-v5-1.0.0-SNAPSHOT.jar --spring.profiles.active=prod
 ## License
 
 MIT License
+
+control-plane real e2e smoke 2026-03-28 run-4
