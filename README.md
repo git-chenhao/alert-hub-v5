@@ -204,8 +204,18 @@ mvn clean package -Dmaven.test.skip=true
 java -jar target/alert-hub-v5-1.0.0-SNAPSHOT.jar --spring.profiles.active=prod
 ```
 
+<!-- SMOKE-MARKER: ci-verification-checkpoint -->
+
 ## License
 
 MIT License
 
+<<<<<<< HEAD
 control-plane real e2e smoke 2026-03-28 run-3
+=======
+<!-- SMOKE_MARKER: v2-test-20260309 -->
+second smoke marker
+
+control-plane real e2e smoke 2026-03-28 run-4
+control-plane real e2e smoke 2026-03-28 run-5
+>>>>>>> origin/main
