@@ -213,5 +213,6 @@ MIT License
 <!-- SMOKE_MARKER: v2-test-20260309 -->
 second smoke marker
 
+control-plane real e2e smoke 2026-03-28 run-3
 control-plane real e2e smoke 2026-03-28 run-4
 control-plane real e2e smoke 2026-03-28 run-5
