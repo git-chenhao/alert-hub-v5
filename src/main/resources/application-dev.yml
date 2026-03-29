@@ -22,3 +22,4 @@ logging:
     org.springframework.web: DEBUG
 
 # swarm-control real e2e smoke 2026-03-29 run-6b
+# swarm-control real e2e smoke 2026-03-30 run-7
