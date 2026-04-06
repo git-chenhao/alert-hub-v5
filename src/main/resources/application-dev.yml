@@ -20,3 +20,5 @@ logging:
   level:
     com.alerthub: DEBUG
     org.springframework.web: DEBUG
+
+# swarm-control real e2e smoke 2026-04-07 run-11
