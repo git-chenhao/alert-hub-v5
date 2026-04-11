@@ -51,6 +51,12 @@ mvn spring-boot:run -Dspring-boot.run.profiles=prod
 - **Webhook 接口**: http://localhost:8080/api/v1/alerts
 - **H2 控制台**: http://localhost:8080/h2-console
 
+### 本地开发提示
+
+- **开发环境默认使用 H2 内存数据库**，无需额外安装和配置，直接 `mvn spring-boot:run` 即可启动。
+- **生产环境建议使用 MySQL**，通过 `prod` profile 激活：`mvn spring-boot:run -Dspring-boot.run.profiles=prod`。
+- **H2 控制台地址**：http://localhost:8080/h2-console（JDBC URL 见 `application-dev.yml`）。
+
 ## 使用说明
 
 ### 发送告警
@@ -369,6 +375,8 @@ mvn clean package -Dmaven.test.skip=true
 java -jar target/alert-hub-v5-1.0.0-SNAPSHOT.jar --spring.profiles.active=prod
 ```
 
+<!-- SMOKE-MARKER: ci-verification-checkpoint -->
+
 ### CI/CD
 
 项目使用 GitHub Actions 进行持续集成，配置文件位于 `.github/workflows/ci.yml`。
@@ -386,3 +394,9 @@ java -jar target/alert-hub-v5-1.0.0-SNAPSHOT.jar --spring.profiles.active=prod
 ## License
 
 MIT License
+
+<!-- SMOKE_MARKER: v2-test-20260309 -->
+second smoke marker
+
+control-plane real e2e smoke 2026-03-28 run-4
+control-plane real e2e smoke 2026-03-28 run-5
