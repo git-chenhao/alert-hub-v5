@@ -51,6 +51,12 @@ mvn spring-boot:run -Dspring-boot.run.profiles=prod
 - **Webhook 接口**: http://localhost:8080/api/v1/alerts
 - **H2 控制台**: http://localhost:8080/h2-console
 
+### 本地开发提示
+
+- **开发环境默认使用 H2 内存数据库**，无需额外安装和配置，直接 `mvn spring-boot:run` 即可启动。
+- **生产环境建议使用 MySQL**，通过 `prod` profile 激活：`mvn spring-boot:run -Dspring-boot.run.profiles=prod`。
+- **H2 控制台地址**：http://localhost:8080/h2-console（JDBC URL 见 `application-dev.yml`）。
+
 ## 使用说明
 
 ### 发送告警
@@ -92,6 +98,58 @@ curl -X POST http://localhost:8080/api/v1/alerts/batch \
   ]'
 ```
 
+### API 响应格式
+
+所有 API 响应遵循统一的 `AlertResponse` 结构：
+
+```json
+{
+  "code": 200,
+  "message": "success",
+  "data": { ... },
+  "timestamp": 1712832000000
+}
+```
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| `code` | Integer | 响应状态码（200 成功，400 客户端错误，500 服务端错误） |
+| `message` | String | 响应消息 |
+| `data` | T | 响应数据（泛型，错误时可能为 null） |
+| `timestamp` | Long | 响应时间戳（毫秒） |
+
+#### 成功响应示例
+
+```json
+{
+  "code": 200,
+  "message": "告警已接收",
+  "data": {
+    "id": 1,
+    "fingerprint": "a1b2c3d4...",
+    "source": "prometheus",
+    "title": "CPU 使用率过高",
+    "severity": "critical",
+    "status": "pending",
+    "createdAt": "2026-04-11 18:00:00"
+  },
+  "timestamp": 1712832000000
+}
+```
+
+#### 去重响应示例
+
+当告警指纹重复时，返回成功但 `data` 为 null：
+
+```json
+{
+  "code": 200,
+  "message": "告警重复，已去重",
+  "data": null,
+  "timestamp": 1712832000000
+}
+```
+
 ### 配置说明
 
 #### application.yml 配置项
@@ -122,6 +180,33 @@ alerthub:
     initial-delay: 10000   # 初始延迟（毫秒）
     fixed-rate: 60000      # 执行频率（毫秒）
 ```
+
+#### 环境变量
+
+| 环境变量 | 必填 | 默认值 | 说明 |
+|----------|------|--------|------|
+| `ALERTHUB_ADMIN_PASSWORD` | 否 | （空） | 管理后台登录密码。未设置时启动会自动生成随机密码并输出到控制台日志 |
+| `SPRING_PROFILES_ACTIVE` | 否 | `dev` | Spring 环境 profile（`dev` / `prod`） |
+| `SERVER_PORT` | 否 | `8080` | 服务监听端口 |
+
+**密码配置建议**：
+
+```bash
+# 启动时通过环境变量设置管理员密码
+export ALERTHUB_ADMIN_PASSWORD=your-secure-password
+mvn spring-boot:run
+
+# 或者使用 Docker 环境变量
+docker run -e ALERTHUB_ADMIN_PASSWORD=your-secure-password alert-hub-v5
+```
+
+> 如果不设置 `ALERTHUB_ADMIN_PASSWORD`，应用启动时会在控制台输出自动生成的密码，格式如下：
+> ```
+> ========================================
+> Generated Admin Password: a1b2c3d4e5f67890
+> Please set ALERTHUB_ADMIN_PASSWORD environment variable!
+> ========================================
+> ```
 
 ## 项目结构
 
@@ -186,6 +271,92 @@ alert-hub-v5/
 - alertCount: 告警数量
 - summary: 批次摘要
 
+## 安全认证与登录流程
+
+### 访问控制模型
+
+Alert Hub 采用基于 Spring Security 的访问控制策略，将端点分为两类：
+
+| 端点类别 | 路径 | 认证要求 | 说明 |
+|----------|------|----------|------|
+| Webhook API | `/api/v1/alerts/**` | 无需认证 | 外部系统推送告警的入口 |
+| 管理后台 | `/admin/**` | 需要认证 | 告警管理、批次查看、手动聚合等 |
+| 登录页面 | `/login` | 无需认证 | 表单登录入口 |
+| H2 控制台 | `/h2-console/**` | 无需认证 | 仅限开发环境使用 |
+| 健康检查 | `/actuator/**` | 无需认证 | 运维监控端点 |
+
+### 登录流程
+
+1. 访问 `/admin` 或任何 `/admin/**` 路径时，未认证用户会被自动重定向到 `/login`
+2. 在登录页面输入用户名（默认 `admin`）和密码
+3. 认证成功后自动跳转到管理后台首页 `/admin`
+4. 退出登录请访问 `/admin/logout`，退出后跳转到 `/login?logout`
+
+### 安全配置
+
+- **认证方式**：Spring Security 表单登录（Form Login）
+- **密码编码**：BCrypt 加密存储
+- **CSRF 防护**：管理界面启用 CSRF 保护，API 端点（`/api/**`）已排除
+- **安全开关**：通过 `alerthub.security.enabled` 配置项控制，设为 `false` 可关闭所有认证（不推荐在生产环境使用）
+
+```yaml
+alerthub:
+  security:
+    enabled: true              # 是否启用安全认证
+    admin-username: admin      # 管理员用户名
+    admin-password: ${ALERTHUB_ADMIN_PASSWORD:}  # 密码，建议通过环境变量设置
+```
+
+> **生产环境安全建议**：务必通过 `ALERTHUB_ADMIN_PASSWORD` 环境变量设置强密码，并确保 `alerthub.security.enabled` 为 `true`。
+
+## 错误码与异常处理
+
+### 错误响应格式
+
+所有错误响应使用与成功响应相同的 `AlertResponse` 结构：
+
+```json
+{
+  "code": 400,
+  "message": "参数校验失败",
+  "timestamp": 1712832000000
+}
+```
+
+### 错误码列表
+
+| 错误码 | 触发场景 | 说明 |
+|--------|----------|------|
+| 400 | 请求参数校验失败 | 必填字段缺失或格式不正确（如 `source`、`title`、`severity` 为空） |
+| 400 | 非法参数 | 传入不合法的参数值（`IllegalArgumentException`） |
+| 500 | 服务端内部错误 | 未预期的运行时异常 |
+
+### 常见错误示例
+
+**参数校验失败（400）**：
+
+```json
+{
+  "code": 400,
+  "message": "参数校验失败",
+  "timestamp": 1712832000000
+}
+```
+
+触发条件：请求体中缺少必填字段（`source`、`title`、`severity`）。
+
+**服务端错误（500）**：
+
+```json
+{
+  "code": 500,
+  "message": "系统内部错误",
+  "timestamp": 1712832000000
+}
+```
+
+> **注意**：在生产环境（`prod` profile）下，500 错误的 `message` 字段不会返回具体异常信息，以避免泄露敏感信息。开发环境下会包含详细的错误描述。
+
 ## 开发指南
 
 ### 编译项目
@@ -204,8 +375,30 @@ mvn clean package -Dmaven.test.skip=true
 java -jar target/alert-hub-v5-1.0.0-SNAPSHOT.jar --spring.profiles.active=prod
 ```
 
+<!-- SMOKE-MARKER: ci-verification-checkpoint -->
+
+### CI/CD
+
+项目使用 GitHub Actions 进行持续集成，配置文件位于 `.github/workflows/ci.yml`。
+
+**触发条件**：
+- 推送到 `main` 分支
+- 向 `main` 分支提交 Pull Request
+
+**构建流程**：
+1. 检出代码
+2. 配置 JDK 17（Temurin 发行版）
+3. Maven 缓存加速
+4. 执行 `mvn compile` 编译验证
+
 ## License
 
 MIT License
+
+<!-- SMOKE_MARKER: v2-test-20260309 -->
+second smoke marker
+
+control-plane real e2e smoke 2026-03-28 run-4
+control-plane real e2e smoke 2026-03-28 run-5
 
 <!-- swarm-control real e2e 2026-04-12 run-6 -->
