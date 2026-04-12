@@ -19,10 +19,10 @@
 
 ## 验收标准
 
-- [ ] 规格文档已创建于 `docs/superpowers/specs/` 目录下
-- [ ] 文档改动已提交到当前分支
-- [ ] 结果 JSON 已正确写入 `$SWARM_CONTROL_RESULT_ARTIFACT_PATH`
-- [ ] 工作区保持干净（无未提交更改）
+- [x] 规格文档已创建于 `docs/superpowers/specs/` 目录下
+- [x] 文档改动已提交到当前分支
+- [x] 结果 JSON 已正确写入 `$SWARM_CONTROL_RESULT_ARTIFACT_PATH`
+- [x] 工作区保持干净（无未提交更改）
 
 ## 项目上下文
 
