@@ -1,4 +1,5 @@
 # Alert Hub V5
+<!-- swarm-control real e2e 2026-04-12 run-8 -->
 
 统一告警聚合平台 - 接收、去重、聚合、通知一站式解决方案
 
